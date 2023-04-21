@@ -12,3 +12,11 @@ app.get("/pet", (req, res) => {
 app.get("/beauty", (req, res) => {
   res.send("<h1>뷰티용품을 쇼핑할수 있는 페이지 입니다용</h1>");
 });
+
+app.get("/beauty", (req, res) => {
+  res.send("<h1>뷰티용품을 쇼핑할수 있는 페이지 입니다용</h1>");
+});
+
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
