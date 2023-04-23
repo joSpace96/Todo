@@ -28,18 +28,33 @@ app.get("/write", (res, req) => {
 });
 
 app.post("/add", (res, req) => {
-  console.log(res.body.date);
-  console.log(res.body.title);
   req.send("전송완료");
-  db.collection("post").insertOne(
-    {
-      title: res.body.title,
-      date: res.body.date,
-    },
-    (err, data) => {
-      console.log("저장완료");
-    }
-  );
+  // db에 있는 counter라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
+  db.collection("counter").findOne({ name: "Posts" }, (err, result) => {
+    console.log(result.totalPost);
+    let totalPost = result.totalPost;
+    // db에 있는 post라는 컬렉션에 id, title, date를 넣어줌
+    db.collection("post").insertOne(
+      {
+        _id: totalPost + 1,
+        title: res.body.title,
+        date: res.body.date,
+      },
+      // 위에 코드가 완료가 되면 db에 있는 counter 안에 있는 Posts를 수정해줌
+      (err, data) => {
+        console.log("저장완료");
+        db.collection("counter").updateOne(
+          { name: "Posts" } /*수정할 데이터*/,
+          { $inc: { totalPost: 1 } } /*$operator 필요 수정값*/,
+          (err, result) => {
+            if (err) {
+              return console.log(err);
+            }
+          }
+        );
+      }
+    );
+  });
 });
 
 app.get("/list", (req, res) => {
