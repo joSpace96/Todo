@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
 
 // mongodb 연결
 var db;
@@ -12,14 +13,6 @@ MongoClient.connect(
   (err, client) => {
     if (err) return console.log(err);
     db = client.db("todo");
-
-    db.collection("post").insertOne(
-      { name: "Jo", age: 28, _id: 99 },
-      (err, data) => {
-        console.log("저장완료");
-      }
-    );
-
     app.listen(3000, () => {
       console.log("listening on 3000");
     });
@@ -47,4 +40,13 @@ app.post("/add", (res, req) => {
       console.log("저장완료");
     }
   );
+});
+
+app.get("/list", (req, res) => {
+  db.collection("post")
+    .find()
+    .toArray((err, result) => {
+      console.log(result);
+      res.render("list.ejs", { posts: result });
+    });
 });
