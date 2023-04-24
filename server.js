@@ -25,11 +25,11 @@ MongoClient.connect(
 );
 
 app.get("/", (req, res) => {
-  res.render("index.ejs", {});
+  res.render("index.ejs");
 });
 
 app.get("/write", (req, res) => {
-  res.render("write.ejs", {});
+  res.render("write.ejs");
 });
 
 app.post("/add", (res, req) => {
@@ -128,4 +128,74 @@ app.put("/edit", (req, res) => {
       res.redirect("/list");
     }
   );
+});
+
+// 로그인 구현 라이브러리 설치 npm install passport passport-local express-session
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
+
+// 미들웨어 (요청과 응답 사이에 실행되는 코드)
+app.use(session({ secret: "secret", resave: true, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get("/login", (req, res) => {
+  res.render("login.ejs");
+});
+
+// 로그인하면 아이디비번 검사
+app.post(
+  "/login",
+  // local 방식으로 회원인증
+  passport.authenticate("local", {
+    // 검사하는 passport 문법
+    failureRedirect: "/fail", // 실패하면 여기로 이동
+  }),
+  (req, res) => {
+    res.redirect("/"); // 성공하면 여기로 보내주세요
+  }
+);
+
+// 누가 /login으로 post 요청할 때만 실행
+passport.use(
+  new LocalStrategy(
+    {
+      // 로그인후 세션에 저장할 껀지
+      usernameField: "id", // form에 입력한 id
+      passwordField: "pw", // form에 입력한 pw
+      session: true,
+      passReqToCallback: false, // id, pw 말고도 다른정보 검증시 true
+    },
+    // 그러면 여기에 req.body. 넣어서 추가
+    // 사용자 아이디와 비번 검증하는 부분
+    (입력한아이디, 입력한비번, done) => {
+      console.log(입력한아이디, 입력한비번);
+      // loginDB에 있는 아이디와 맞는지 확인
+      db.collection("login").findOne({ id: 입력한아이디 }, (err, result) => {
+        // 에러면 에러
+        // done(서버에러, 성공시사용자DB데이터, 에러메세지)
+        if (err) return done(err);
+        // 아무것도 없으면 이거 실행
+        if (!result) return done(null, false, { message: "not found Id" });
+        // DB에 아이디가 있으면 입력한 비번과 result.pw와 비교
+        if (입력한비번 == result.pw) {
+          return done(null, result);
+        } else {
+          return done(null, false, { message: "not found Pw" });
+        }
+      });
+    }
+  )
+);
+
+// 세션을 저장시키는 코드(로그인 성공시)
+// 아이디/비번 검증 성공시 user = result
+passport.serializeUser((user, done) => {
+  done(null, user.id); // user.id에 세션을 저장
+});
+
+// 마이페이지 접속시 발동 이 세션을 가진사람을 DB에서 찾아주세요
+passport.serializeUser((아이디, done) => {
+  done(null, {});
 });
