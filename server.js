@@ -1,14 +1,17 @@
-const express = require("express");
+const express = require("express"); // 서버열수 있음
 const app = express();
 const bodyParser = require("body-parser");
+const MongoClient = require("mongodb").MongoClient; // DB연결
+const methodOverride = require("method-override"); // HTML form태그에서 method PUT/DELETE가능
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
+app.use(methodOverride("_method"));
 
 app.use("/public", express.static("public"));
 
 // mongodb 연결
 var db;
-const MongoClient = require("mongodb").MongoClient;
 MongoClient.connect(
   "mongodb+srv://admin:1q2w3e4r@cluster0.yvz01u3.mongodb.net/?retryWrites=true&w=majority",
   { useUnifiedTopology: true },
@@ -68,6 +71,7 @@ app.get("/list", (req, res) => {
     });
 });
 
+// 삭제
 app.delete("/delete", (req, res) => {
   // req.body는 _id
   console.log(req.body);
@@ -93,6 +97,35 @@ app.get("/detail/:id", (req, res) => {
         console.log(result);
         res.render("detail.ejs", { data: result });
       }
+    }
+  );
+});
+
+app.get("/edit/:id", (req, res) => {
+  db.collection("post").findOne(
+    { _id: parseInt(req.params.id) },
+    (err, result) => {
+      if (result === null) {
+        console.log("데이터가 없엉");
+        res.send("데이터가 없음");
+      } else {
+        console.log(result);
+        res.render("edit.ejs", { post: result });
+      }
+    }
+  );
+});
+
+// 수정
+app.put("/edit", (req, res) => {
+  // 폼에 담긴 제목, 날짜데이터를 가지고 db.collection 에다가 업데이트 함
+  // db에 있는 post테이블에 업데이트 할껀데
+  db.collection("post").updateOne(
+    { _id: parseInt(req.body.id) }, // 이거 찾아주세요
+    { $set: { title: req.body.title, date: req.body.date } }, // 그걸 이렇게 바꿔주세요
+    (err, result) => {
+      console.log("수정완료"); // 다하면 실행시켜주세요
+      res.redirect("/list");
     }
   );
 });

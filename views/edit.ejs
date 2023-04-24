@@ -38,17 +38,18 @@
       </body>
     </html>
 
-    <h4 class="container mt-4"><strong>글 작성페이지</strong></h4>
+    <h4 class="container mt-4"><strong>글 수정페이지</strong></h4>
 
     <div class="container mt-3">
-      <form action="/add" method="POST">
+      <form action="/edit?_method=PUT" method="POST"> <!-- action뒤에 ?_method=PUT -->
         <div class="form-group">
           <label>할일</label>
-          <input type="text" class="form-control" name="title" />
+          <input type="text" value ="<%= post._id %>" name="id" style="display:none"> <!-- 사용자 한테는 안보이는 id값 -->
+          <input value ="<%= post.title %>" type="text" class="form-control" name="title" />
         </div>
         <div class="form-group">
           <label>마감</label>
-          <input type="text" class="form-control" name="date" />
+          <input value ="<%= post.date %>" type="text" class="form-control" name="date" />
         </div>
         <button type="submit" class="btn btn-outline-secondary">Submit</button>
       </form>
