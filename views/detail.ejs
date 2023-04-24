@@ -68,52 +68,9 @@
       </div>
     </nav>
 
-    <h4 class="ml-2 my-3">서버에서 가져온 할일 리스트</h4>
-
-    <!-- <% for(i=0; i < posts.length; i++){ %>
-    <h4>할일 제목 : <%= posts[i].title %></h4>
-    <p>할일 마감날짜 : <%= posts[i].date %></p>
-    <button>삭제</button>
-    <% } %> -->
-
-    <ul class="list-group">
-      <% for(i=0; i < posts.length; i++){ %>
-      <li class="list-group-item">
-        <p>글번호 : <%= posts[i]._id %></p>
-        <a href="/detail/<%= posts[i]._id %>"
-          >할일 제목 : <%= posts[i].title %></a
-        >
-        <p>할일 마감날짜 : <%= posts[i].date %></p>
-        <button class="delete" data-id="<%= posts[i]._id %>">삭제</button>
-      </li>
-      <% } %>
-    </ul>
-
-    <!-- jquery 라이브러 사용 -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-
-    <script>
-      // class가 delete인 요소를 클릭하면 내부코드 실행
-      $(".delete").click((e) => {
-        var list_num = e.target.dataset.id;
-        var now = $(this);
-        $.ajax({
-          method: "DELETE",
-          url: "/delete", // 요청할 경로
-          // 지금내가 클릭한 버튼의 id를 넣기
-          // 내가 누른 버튼에 숨겨져있는 data-id를 가져와줌
-          data: { _id: list_num }, // 요청과 함께 보낼데이터
-        })
-          .done((result) => {
-            console.log("성공했어염");
-            // 삭제버튼을 눌렀을때 <li>요소를 제거
-            now.parent("li").fadeOut();
-          })
-          .fail((xhr, textStatus, errorThrown) => {
-            console.log(xhr, textStatus, errorThrown);
-          });
-      });
-    </script>
+    <h4>상세페이지</h4>
+    <h4>제목 : <%= data.title %></h4>
+    <h4>날짜 : <%= data.date %></h4>
 
     <!-- Optional JavaScript; choose one of the two! -->
 

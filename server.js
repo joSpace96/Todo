@@ -76,3 +76,21 @@ app.delete("/delete", (req, res) => {
     res.status(200).send({ message: "성공했습니다" });
   });
 });
+
+// : URL의 parameter
+app.get("/detail/:id", (req, res) => {
+  // req.params.id = 파라미터중 id값을 찾아서 가져옴
+
+  db.collection("post").findOne(
+    { _id: parseInt(req.params.id) },
+    (err, result) => {
+      if (result === null) {
+        console.log("데이터가 없엉");
+        res.send("데이터가 없음");
+      } else {
+        console.log(result);
+        res.render("detail.ejs", { data: result });
+      }
+    }
+  );
+});
