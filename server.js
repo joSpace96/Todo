@@ -157,6 +157,22 @@ app.post(
   }
 );
 
+// mypage로 누가 요청하면 areYouLogin미들웨어 실행 후 코드실행
+app.get("/mypage", areYouLogin, (req, res) => {
+  console.log(req.user); // 여기에 데이터 있음
+  res.render("mypage.ejs", { 사용자: req.user });
+});
+
+// 미들웨어 생성
+function areYouLogin(req, res, next) {
+  // req.user(로그인 후 세션이 있으면 항상 있음)가 있으면 next() 통과
+  if (req.user) {
+    next();
+  } else {
+    res.send("로그인 안함");
+  }
+}
+
 // 누가 /login으로 post 요청할 때만 실행
 passport.use(
   new LocalStrategy(
@@ -195,7 +211,9 @@ passport.serializeUser((user, done) => {
   done(null, user.id); // user.id에 세션을 저장
 });
 
-// 마이페이지 접속시 발동 이 세션을 가진사람을 DB에서 찾아주세요
-passport.serializeUser((아이디, done) => {
-  done(null, {});
+// 마이페이지 접속시 발동 디비에서 위에 있는 user.id로 유저를 찾은 뒤에 유저정보를 {요기에 넣음}
+passport.deserializeUser((아이디, done) => {
+  db.collection("login").findOne({ id: 아이디 }, (err, result) => {
+    done(null, result);
+  });
 });
