@@ -65,3 +65,14 @@ app.get("/list", (req, res) => {
       res.render("list.ejs", { posts: result });
     });
 });
+
+app.delete("/delete", (req, res) => {
+  // req.body는 _id
+  console.log(req.body);
+  req.body._id = parseInt(req.body._id);
+  // req.body에 담겨온 게시물번호를 가진 글을  db에서 찾아서 삭제
+  db.collection("post").deleteOne(req.body, (err, result) => {
+    console.log("삭제완료");
+    res.status(200).send({ message: "성공했습니다" });
+  });
+});
