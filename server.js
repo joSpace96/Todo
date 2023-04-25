@@ -35,7 +35,6 @@ app.get("/write", (req, res) => {
 });
 
 app.post("/add", (res, req) => {
-  req.send("전송완료");
   // db에 있는 counter라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
   db.collection("counter").findOne({ name: "Posts" }, (err, result) => {
     console.log(result.totalPost);
@@ -73,7 +72,7 @@ app.get("/list", (req, res) => {
     });
 });
 
-// 삭제
+// 게시물 삭제
 app.delete("/delete", (req, res) => {
   // req.body는 _id
   console.log(req.body);
@@ -118,7 +117,7 @@ app.get("/edit/:id", (req, res) => {
   );
 });
 
-// 수정
+// 게시물 수정
 app.put("/edit", (req, res) => {
   // 폼에 담긴 제목, 날짜데이터를 가지고 db.collection 에다가 업데이트 함
   // db에 있는 post테이블에 업데이트 할껀데
@@ -218,4 +217,20 @@ passport.deserializeUser((아이디, done) => {
   db.collection("login").findOne({ id: 아이디 }, (err, result) => {
     done(null, result);
   });
+});
+
+// 회원가입
+app.get("/signup", (req, res) => {
+  res.render("signup.ejs");
+});
+
+app.post("/signup", (req, res) => {
+  // db에 있는 login라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
+  db.collection("login").insertOne(
+    { id: req.body.id, pw: req.body.pw },
+    (err, result) => {
+      console.log("회원가입 완료");
+      res.redirect("/login");
+    }
+  );
 });
