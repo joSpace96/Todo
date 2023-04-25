@@ -10,15 +10,17 @@ app.use(methodOverride("_method"));
 
 app.use("/public", express.static("public"));
 
+require("dotenv").config();
+
 // mongodb 연결
 var db;
 MongoClient.connect(
-  "mongodb+srv://admin:1q2w3e4r@cluster0.yvz01u3.mongodb.net/?retryWrites=true&w=majority",
+  process.env.DB_URL,
   { useUnifiedTopology: true },
   (err, client) => {
     if (err) return console.log(err);
     db = client.db("todo");
-    app.listen(3000, () => {
+    app.listen(process.env.PORT, () => {
       console.log("listening on 3000");
     });
   }
