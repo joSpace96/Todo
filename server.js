@@ -3,6 +3,8 @@ const app = express();
 const bodyParser = require("body-parser");
 const MongoClient = require("mongodb").MongoClient; // DB연결
 const methodOverride = require("method-override"); // HTML form태그에서 method PUT/DELETE가능
+const bcrypt = require("bcrypt"); // 패스워드 해싱
+const saltRounds = 10; // salt를 생성하는데 필요한 라운드 수
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -32,36 +34,6 @@ app.get("/", (req, res) => {
 
 app.get("/write", (req, res) => {
   res.render("write.ejs");
-});
-
-app.post("/add", (req, res) => {
-  // db에 있는 counter라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
-  db.collection("counter").findOne({ name: "Posts" }, (err, result) => {
-    console.log(result.totalPost);
-    let totalPost = result.totalPost;
-    // db에 있는 post라는 컬렉션에 id, title, date를 넣어줌
-    db.collection("post").insertOne(
-      {
-        _id: totalPost + 1,
-        title: req.body.title,
-        date: req.body.date,
-      },
-      // 위에 코드가 완료가 되면 db에 있는 counter 안에 있는 Posts를 수정해줌
-      (err, data) => {
-        console.log("저장완료");
-        db.collection("counter").updateOne(
-          { name: "Posts" } /*수정할 데이터*/,
-          { $inc: { totalPost: 1 } } /*$operator 필요 수정값*/,
-          (err, result) => {
-            if (err) {
-              return console.log(err);
-            }
-            res.redirect("/list");
-          }
-        );
-      }
-    );
-  });
 });
 
 app.get("/list", (req, res) => {
@@ -99,23 +71,6 @@ app.get("/search", (req, res) => {
       console.log(result);
       res.render("search.ejs", { search_ports: result }); // {} 데이터 보내기
     });
-});
-
-// 게시물 삭제
-app.delete("/delete", (req, res) => {
-  // req.body는 _id
-  console.log(req.body);
-  req.body._id = parseInt(req.body._id);
-  // req.body에 담겨온 게시물번호를 가진 글을  db에서 찾아서 삭제
-  db.collection("post").deleteOne(req.body, (err, result) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send("오류가 발생했습니다.");
-    } else {
-      console.log("삭제완료");
-      res.status(200).send({ message: "성공했습니다" });
-    }
-  });
 });
 
 // : URL의 parameter
@@ -259,12 +214,78 @@ app.get("/signup", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
-  // db에 있는 login라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
-  db.collection("login").insertOne(
-    { id: req.body.id, pw: req.body.pw },
+  db.collection("login")
+    .find({ id: req.body.id }) // 로그인 테이블에서 입력한 id와 기존에 있는 id 찾기
+    .toArray((err, result) => {
+      if (result.length > 0) {
+        // length가 1이상인 경우 있는거임
+        // 이미 등록된 아이디인 경우
+        console.log("회원가입 실패");
+        res.render("signup.ejs", {
+          data: { error: "이미 등록된 아이디 입니다." },
+        });
+      } else {
+        // 등록되지 않은 아이디인 경우
+        db.collection("login").insertOne(
+          {
+            id: req.body.id,
+            pw: bcrypt.hashSync(req.body.pw, saltRounds), // 패스워드를 해싱하여 저장
+          },
+          (err, result) => {
+            console.log("회원가입 완료");
+            res.redirect("/login");
+          }
+        );
+      }
+    });
+});
+
+app.post("/add", (req, res) => {
+  // db에 있는 counter라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
+  db.collection("counter").findOne({ name: "Posts" }, (err, result) => {
+    var totalPost = result.totalPost;
+    // db에 있는 post라는 컬렉션에 id, title, date를 넣어줌
+    db.collection("post").insertOne(
+      {
+        _id: totalPost + 1,
+        title: req.body.title,
+        date: req.body.date,
+        writer: req.user.id, // 게시판 작성자 추가
+      },
+      // 위에 코드가 완료가 되면 db에 있는 counter 안에 있는 Posts를 수정해줌
+      (err, data) => {
+        console.log("저장완료");
+        db.collection("counter").updateOne(
+          { name: "Posts" } /*수정할 데이터*/,
+          { $inc: { totalPost: 1 } } /*$operator 필요 수정값*/,
+          (err, result) => {
+            if (err) {
+              return console.log(err);
+            }
+            res.redirect("/list", { writet: req.user });
+          }
+        );
+      }
+    );
+  });
+});
+
+// 게시물 삭제
+app.delete("/delete", (req, res) => {
+  // req.body는 _id
+  console.log(req.body);
+  req.body._id = parseInt(req.body._id);
+  // req.body에 담겨온 게시물번호를 가진 글을  db에서 찾아서 삭제
+  db.collection("post").deleteOne(
+    { _id: req.body._id, writer: req.user.id }, // 로그인 중인 user의 id와 글에 저장된 user의 id가 일치하면 삭제
     (err, result) => {
-      console.log("회원가입 완료");
-      res.redirect("/login");
+      if (err) {
+        console.error(err);
+        res.status(500).send("오류가 발생했습니다.");
+      } else {
+        console.log("삭제완료");
+        res.status(200).send({ message: "성공했습니다" });
+      }
     }
   );
 });
