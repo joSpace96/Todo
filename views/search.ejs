@@ -28,58 +28,24 @@
 
     <h4 class="ml-2 my-3 text-center">리스트</h4>
 
-    <div class="container input-group mb-2">
-      <input class="form-control" id="search-input" />
-      <button class="input-group-append btn btn-danger" id="search">
-        검색
-      </button>
-    </div>
-
-    <script>
-      // get요청으로 검색기능 구현
-      $("#search").click(function () {
-        var search_value = $("#search-input").val(); // input에 입력한값
-        window.location.replace("/search?value=" + search_value); // url을 이걸로 바꿔주세요
-      });
-    </script>
-
     <ul class="list-group">
-      <% for(i=0; i < posts.length; i++){ %>
+      <% for(i=0; i < search_ports.length; i++){ %>
       <li class="list-group-item">
-        <p>글번호 : <%= posts[i]._id %></p>
-        <a href="/detail/<%= posts[i]._id %>"
-          >할일 제목 : <%= posts[i].title %></a
         >
-        <p>할일 마감날짜 : <%= posts[i].date %></p>
-        <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">
+        <p>글번호 : <%= search_ports[i]._id %></p>
+        <a href="/detail/<%= search_ports[i]._id %>"
+          >할일 제목 : <%= search_ports[i].title %></a
+        >
+        <p>할일 마감날짜 : <%= search_ports[i].date %></p>
+        <button
+          class="btn btn-danger delete"
+          data-id="<%= search_ports[i]._id %>"
+        >
           삭제
         </button>
       </li>
       <% } %>
     </ul>
-
-    <script>
-      // class가 delete인 요소를 클릭하면 내부코드 실행
-      $(".delete").click(function (e) {
-        var list_num = e.target.dataset.id;
-        var now = $(this); // 지금 이벤트 동작하는곳
-        $.ajax({
-          method: "DELETE",
-          url: "/delete", // 요청할 경로
-          // 지금내가 클릭한 버튼의 id를 넣기
-          // 내가 누른 버튼에 숨겨져있는 data-id를 가져와줌
-          data: { _id: list_num }, // 요청과 함께 보낼데이터
-        })
-          .done(function (result) {
-            console.log("성공했어염");
-            // 삭제버튼을 눌렀을때 <li>요소를 제거
-            now.parent("li").fadeOut();
-          })
-          .fail(function (xhr, textStatus, errorThrown) {
-            console.log(xhr, textStatus, errorThrown);
-          });
-      });
-    </script>
 
     <!-- Optional JavaScript; choose one of the two! -->
 

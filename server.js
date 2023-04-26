@@ -34,7 +34,7 @@ app.get("/write", (req, res) => {
   res.render("write.ejs");
 });
 
-app.post("/add", (res, req) => {
+app.post("/add", (req, res) => {
   // db에 있는 counter라는 컬렉션을 찾고 그 안에 있는 Posts를 찾고 Posts를 변수에 저장
   db.collection("counter").findOne({ name: "Posts" }, (err, result) => {
     console.log(result.totalPost);
@@ -43,8 +43,8 @@ app.post("/add", (res, req) => {
     db.collection("post").insertOne(
       {
         _id: totalPost + 1,
-        title: res.body.title,
-        date: res.body.date,
+        title: req.body.title,
+        date: req.body.date,
       },
       // 위에 코드가 완료가 되면 db에 있는 counter 안에 있는 Posts를 수정해줌
       (err, data) => {
@@ -56,6 +56,7 @@ app.post("/add", (res, req) => {
             if (err) {
               return console.log(err);
             }
+            res.redirect("/list");
           }
         );
       }
@@ -72,6 +73,16 @@ app.get("/list", (req, res) => {
     });
 });
 
+app.get("/search", (req, res) => {
+  console.log(req.query.value); // 검색창에 입력한정보
+  db.collection("post")
+    .find({ title: req.query.value })
+    .toArray((err, result) => {
+      console.log(result);
+      res.render("search.ejs", { search_ports: result }); // {} 데이터 보내기
+    });
+});
+
 // 게시물 삭제
 app.delete("/delete", (req, res) => {
   // req.body는 _id
@@ -79,8 +90,13 @@ app.delete("/delete", (req, res) => {
   req.body._id = parseInt(req.body._id);
   // req.body에 담겨온 게시물번호를 가진 글을  db에서 찾아서 삭제
   db.collection("post").deleteOne(req.body, (err, result) => {
-    console.log("삭제완료");
-    res.status(200).send({ message: "성공했습니다" });
+    if (err) {
+      console.error(err);
+      res.status(500).send("오류가 발생했습니다.");
+    } else {
+      console.log("삭제완료");
+      res.status(200).send({ message: "성공했습니다" });
+    }
   });
 });
 
