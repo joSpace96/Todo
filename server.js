@@ -73,10 +73,28 @@ app.get("/list", (req, res) => {
     });
 });
 
+// mongodb에서 search index(한글)를 만들어서 search기능(일치하는 검색어 전부)이용하기
 app.get("/search", (req, res) => {
+  var search_condition = [
+    {
+      $search: {
+        index: "titleSearch", // 만들었던 인덱스명
+        text: {
+          // 검색 요청하는부분
+          query: req.query.value,
+          path: "title", // 제목 날짜 둘다 찾고 싶으면["제목","날짜"]
+        },
+      },
+    },
+    { $sort: { _id: 1 } }, // DB에서 데이터 가져올때 정렬
+    { $limit: 10 }, // 10개만 보여줌
+    {
+      $project: { title: 1, _id: 1, date: 1, score: { $meta: "searchScore" } },
+    }, //검색결과에서 필터 가져온다 1, 아니다 0
+  ];
   console.log(req.query.value); // 검색창에 입력한정보
   db.collection("post")
-    .find({ title: req.query.value })
+    .aggregate(search_condition)
     .toArray((err, result) => {
       console.log(result);
       res.render("search.ejs", { search_ports: result }); // {} 데이터 보내기
