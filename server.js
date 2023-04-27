@@ -289,3 +289,35 @@ app.delete("/delete", (req, res) => {
     }
   );
 });
+
+app.use("/shop", require("./routes/shop"));
+app.use("/board/sub", require("./routes/board"));
+
+// 이미지 저장
+let multer = require("multer");
+var storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // 여기에 저장
+    cb(null, "./public/image");
+  },
+  filename: (req, file, cb) => {
+    // 파일명을 이렇게
+    cb(null, file.originalname);
+  },
+  filefilter: (req, file, cd) => {},
+});
+
+var upload = multer({ storage: storage });
+
+app.get("/upload", (req, res) => {
+  res.render("upload.ejs");
+});
+
+//                     input에 있는 name
+app.post("/upload", upload.single("img"), (req, res) => {
+  res.send("업로드 완료");
+});
+
+app.get("/image/:imgName", (req, res) => {
+  res.sendFile(__dirname + "/public/image/" + req.params.imgName);
+});
